@@ -1,0 +1,68 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+    <h2 style="text-align: left">Listing: {{ listing.title }}</h2>
+    {% if listing.image %}
+        <img src="{{ listing.image }}" alt="{{ listing.title }}" class="listing-individual-img">
+    {% endif %}
+    <p>{{ listing.description }}</p>
+    <p style="font-size: x-large"><strong>
+        ${% if listing.current_bid %}{{ listing.current_bid.bid }}{% else %}{{ listing.price }} {% endif %}
+    </strong></p>
+    <p class="created-at">
+        {{ listing.n_bids }} bid(s) so far.
+        {% if listing.n_bids != 0 %}
+            {% if listing.current_bid.author ==  user %} Your
+            {% else %} {{ listing.current_bid.author }}'s {% endif %}bid is the current bid.
+        {% endif %}
+
+    </p>
+
+    {% if message %}
+        {{ message }}
+    {% endif %}
+
+    {% if listing.active %}
+        <form action="{% url 'auctions:listings' listing.id %}" method="post">
+        {% csrf_token %}
+        {{ form.place_bid }}
+            <button class="watchlist-button not-in-watchlist" type="submit">Place Bid</button>
+        </form>
+        <br>
+        {% if listing.author == user %}
+        <form action="{% url 'auctions:close_bid' listing.id %}" method="post">
+            {% csrf_token %}
+            <button class="watchlist-button in-watchlist" type="submit">Close Bid</button>
+        </form>
+        <br>
+        {% endif %}
+    {% elif listing.current_bid.author == user %}
+        <h3>You won the Auction!</h3>
+    {% endif %}
+    
+    <h3>Details</h3>
+    <ul>
+        <li>Listed by: {{ listing.author }}</li>
+        <li>Category: {{ listing.get_category_display }}</li>
+    </ul>
+    <br>
+    
+    <h3>Comments: </h3>
+    <ul>
+        {% for comment in listing.comments.all %}
+            <li>{{ comment.author }} commented: "{{ comment.comment }}"</li>
+        {% empty %}
+            <li>No comments yet.</li>
+        {% endfor %}
+    </ul>
+    <br>
+    
+    
+    
+    <form action="{% url 'auctions:create_comment' listing.id %}" method="post">
+        {% csrf_token %}
+        <p><label for="comment">Comment on the Auction: </label></p>
+        <textarea id="comment" name="comment" rows="10" cols="40"></textarea><br>
+        <input type="submit" value="Save">
+    </form>
+{% endblock %}
